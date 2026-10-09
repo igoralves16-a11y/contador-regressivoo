@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contagem Regressiva</title>
+<style>
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #101827;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+main {
+  width: min(90%, 540px);
+  padding: 25px;
+  box-sizing: border-box;
+  background: #1e293b;
+  border-radius: 18px;
+  text-align: center;
+}
+h1 { color: #7dd3fc; }
+.contador {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 25px 0;
+}
+.unidade {
+  padding: 15px 3px;
+  background: #334155;
+  border-radius: 10px;
+}
+.numero {
+  display: block;
+  font-size: clamp(22px, 5vw, 36px);
+  font-weight: bold;
+  color: #7dd3fc;
+}
+.rotulo { font-size: 11px; }
+input, button {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 16px;
+}
+button {
+  background: #0284c7;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+#mensagem { min-height: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>⏳ Contagem Regressiva</h1>
+  <p>Quanto tempo falta para o seu objetivo?</p>
+
+  <div class="contador">
+    <div class="unidade">
+      <span class="numero" id="dias">00</span>
+      <span class="rotulo">DIAS</span>
+    </div>
+    <div class="unidade">
+      <span class="numero" id="horas">00</span>
+      <span class="rotulo">HORAS</span>
+    </div>
+    <div class="unidade">
+      <span class="numero" id="minutos">00</span>
+      <span class="rotulo">MINUTOS</span>
+    </div>
+    <div class="unidade">
+      <span class="numero" id="segundos">00</span>
+      <span class="rotulo">SEGUNDOS</span>
+    </div>
+  </div>
+
+  <label for="objetivo">Escolha a data e a hora final:</label>
+  <input type="datetime-local" id="objetivo">
+  <button id="iniciar">Iniciar contagem</button>
+  <p id="mensagem" aria-live="polite">
+    Escolha uma data futura para começar.
+  </p>
+</main>
+
+<script>
+const elemento = id => document.getElementById(id);
+let intervalo;
+
+function calculaHorasRestantes(tempoObjetivo) {
+  const diferenca = tempoObjetivo - Date.now();
+
+  if (diferenca <= 0) return null;
+
+  return {
+    dias: Math.floor(diferenca / 86400000),
+    horas: Math.floor(diferenca / 3600000) % 24,
+    minutos: Math.floor(diferenca / 60000) % 60,
+    segundos: Math.floor(diferenca / 1000) % 60
+  };
+}
+
+function atualizar(tempoObjetivo) {
+  const tempo = calculaHorasRestantes(tempoObjetivo);
+
+  if (!tempo) {
+    clearInterval(intervalo);
+    ["dias", "horas", "minutos", "segundos"].forEach(
+      id => elemento(id).textContent = "00"
+    );
+    elemento("mensagem").textContent = "🎉 O tempo acabou!";
+    return;
+  }
+
+  Object.entries(tempo).forEach(([unidade, valor]) => {
+    elemento(unidade).textContent = String(valor).padStart(2, "0");
+  });
+
+  elemento("mensagem").textContent =
+    "Contagem regressiva em andamento!";
+}
+
+elemento("iniciar").addEventListener("click", () => {
+  const valor = elemento("objetivo").value;
+  const data = new Date(valor).getTime();
+
+  if (!valor || !Number.isFinite(data) || data <= Date.now()) {
+    elemento("mensagem").textContent =
+      "Escolha uma data e hora futuras.";
+    return;
+  }
+
+  clearInterval(intervalo);
+  atualizar(data);
+  intervalo = setInterval(() => atualizar(data), 1000);
+});
+</script>
+</body>
+</html>
